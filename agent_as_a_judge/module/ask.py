@@ -9,10 +9,11 @@ from pathlib import Path
 from dotenv import load_dotenv
 from rich.logging import RichHandler
 from agent_as_a_judge.llm.provider import LLM
-from agent_as_a_judge.module.prompt.system_prompt_judge import get_judge_system_prompt
-from agent_as_a_judge.module.prompt.prompt_judge import get_judge_prompt
-from agent_as_a_judge.module.prompt.system_prompt_ask import get_ask_system_prompt
-from agent_as_a_judge.module.prompt.prompt_ask import get_ask_prompt
+from agent_as_a_judge.module.utils import (
+    load_yaml_file,
+    populate_template,
+    Language,
+)
 
 warnings.simplefilter("ignore", category=FutureWarning)
 
@@ -24,10 +25,13 @@ logging.basicConfig(
 
 
 class DevAsk:
-    def __init__(self, workspace: Path, judge_dir: Path):
+    def __init__(self, workspace: Path, judge_dir: Path, language="English"):
         self.workspace = workspace
         self.judge_dir = judge_dir
         self.llm = self._initialize_llm()
+        self.language = Language(language)
+        self.ask_template = load_yaml_file()['ask']
+        self.judge_template = load_yaml_file()['judge']
 
     def _initialize_llm(self) -> LLM:
         try:
@@ -62,8 +66,10 @@ class DevAsk:
     def _collect_judgments(
         self, criteria: str, evidence: str, majority_vote: int, llm_stats: dict
     ) -> tuple:
-        system_prompt = get_judge_system_prompt(language="English")
-        prompt = get_judge_prompt(criteria=criteria, evidence=evidence)
+        judge_template = self.judge_template
+        system_prompt = populate_template(judge_template["system_prompt"][self.language.type], {})
+        variables = {"criteria": criteria, "evidence": evidence}
+        prompt = populate_template(judge_template["template"][self.language.type], variables)
         messages = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": prompt},
@@ -106,9 +112,10 @@ class DevAsk:
     def ask(self, question: str, evidence: str) -> str:
         if not evidence:
             raise ValueError("Evidence must be provided.")
-
-        system_prompt = get_ask_system_prompt(language="English")
-        prompt = get_ask_prompt(evidence=evidence, question=question)
+        ask_template = self.ask_template
+        system_prompt = populate_template(ask_template["system_prompt"][self.language.type], {})
+        variables = {"evidence": evidence, "question": question}
+        prompt = populate_template(ask_template["template"][self.language.type], variables)
         messages = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": prompt},

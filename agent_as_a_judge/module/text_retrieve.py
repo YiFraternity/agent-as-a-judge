@@ -15,10 +15,11 @@ from rank_bm25 import BM25Okapi
 import numpy as np
 from sentence_transformers import SentenceTransformer, util
 from agent_as_a_judge.llm.provider import LLM
-from agent_as_a_judge.module.prompt.system_prompt_retrieve import (
-    get_retrieve_system_prompt,
+from agent_as_a_judge.module.utils import (
+    load_yaml_file,
+    populate_template,
+    Language,
 )
-from agent_as_a_judge.module.prompt.prompt_retrieve import get_text_retrieve_prompt
 from agent_as_a_judge.utils import truncate_string
 from rich.logging import RichHandler
 from rich.console import Console
@@ -36,7 +37,7 @@ logging.basicConfig(
 
 
 class DevTextRetrieve:
-    def __init__(self, trajectory_file: str):
+    def __init__(self, trajectory_file: str, language="English"):
         self.trajectory_file = Path(trajectory_file)
         self.raw_trajectory_data = self.load_trajectory_data()
         self.text_data = self.process_trajectory_data()
@@ -50,6 +51,8 @@ class DevTextRetrieve:
             base_url=os.getenv("OPENAI_API_BASE", 'https://api.openai.com'),
             custom_llm_provider=os.getenv("CUSTOM_LLM_PROVIDER", None)
         )
+        self.language = Language(language)
+        self.template = load_yaml_file()['retrieve']
 
     @property
     def _spacy(self):
@@ -225,8 +228,10 @@ class DevTextRetrieve:
             drop_mode="head",
         )
 
-        system_prompt = get_retrieve_system_prompt(language="English")
-        prompt = get_text_retrieve_prompt(criteria=criteria, long_context=combined_text)
+        retrieve_template = self.template
+        system_prompt = populate_template(retrieve_template["system_prompt"][self.language.type], {})
+        variables = {"criteria": criteria, "long_context": combined_text}
+        prompt = populate_template(retrieve_template["template"][self.language.type], variables)
 
         messages = [
             {"role": "system", "content": system_prompt},

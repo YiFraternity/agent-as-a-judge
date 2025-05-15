@@ -5,10 +5,11 @@ import logging
 from agent_as_a_judge.llm.provider import LLM
 from dotenv import load_dotenv
 from rich.logging import RichHandler
-from agent_as_a_judge.module.prompt.system_prompt_planning import (
-    get_planning_system_prompt,
+from agent_as_a_judge.module.utils import (
+    load_yaml_file,
+    populate_template,
+    Language,
 )
-from agent_as_a_judge.module.prompt.prompt_planning import get_planning_prompt
 
 logging.basicConfig(
     level=logging.INFO,
@@ -19,17 +20,20 @@ load_dotenv(override=True)
 
 
 class Planning:
-    def __init__(self):
+    def __init__(self, language="English"):
         self.llm = LLM(
             model=os.getenv("DEFAULT_LLM"),
             api_key=os.getenv("OPENAI_API_KEY"),
             base_url=os.getenv("OPENAI_API_BASE", None),
             custom_llm_provider=os.getenv("CUSTOM_LLM_PROVIDER", None)
         )
+        self.language = Language(language)
+        self.template = load_yaml_file()['planning']
 
     def generate_plan(self, criteria: str) -> dict:
-        system_prompt = get_planning_system_prompt("English")  #
-        user_prompt = get_planning_prompt(criteria)
+        system_prompt = populate_template(self.template["system_prompt"][self.language.type], {})
+        variables = {"criteria": criteria}
+        user_prompt = populate_template(self.template["template"][self.language.type], variables)
 
         messages = [
             {"role": "system", "content": system_prompt},

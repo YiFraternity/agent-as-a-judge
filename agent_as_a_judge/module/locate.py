@@ -9,8 +9,11 @@ import logging
 from dotenv import load_dotenv
 from rich.logging import RichHandler
 from agent_as_a_judge.llm.provider import LLM
-from agent_as_a_judge.module.prompt.system_prompt_locate import get_system_prompt_locate
-from agent_as_a_judge.module.prompt.prompt_locate import get_prompt_locate
+from agent_as_a_judge.module.utils import (
+    load_yaml_file,
+    populate_template,
+    Language,
+)
 
 warnings.simplefilter("ignore", category=FutureWarning)
 logging.basicConfig(
@@ -21,8 +24,10 @@ logging.basicConfig(
 
 
 class DevLocate:
-    def __init__(self):
+    def __init__(self, language="English"):
         self.llm = self._initialize_llm()
+        self.language = Language(language)
+        self.template = load_yaml_file()['locate']
 
     def _initialize_llm(self) -> LLM:
         model = os.getenv("DEFAULT_LLM")
@@ -41,8 +46,12 @@ class DevLocate:
         )
 
     def locate_file(self, criteria: str, workspace_info: str) -> dict:
-        system_prompt = get_system_prompt_locate(language="English")
-        prompt = get_prompt_locate(criteria=criteria, workspace_info=workspace_info)
+        system_prompt = populate_template(self.template["system_prompt"][self.language.type], {})
+        variables = {
+            "criteria": criteria,
+            "workspace_info": workspace_info,
+        }
+        prompt = populate_template(self.template["template"][self.language.type], variables)
         messages = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": prompt},
