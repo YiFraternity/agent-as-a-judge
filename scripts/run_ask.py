@@ -69,10 +69,10 @@ def display_qa(question: str, response: str, logger: logging.Logger):
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--workspace", type=str, required=True, help="Path to the workspace directory"
+        "--workspace", type=str, required=False, help="Path to the workspace directory", default='benchmark/workspaces/OpenHands/39_Drug_Response_Prediction_SVM_GDSC_ML'
     )
     parser.add_argument(
-        "--question", type=str, required=True, help="Initial question to ask the agent"
+        "--question", type=str, required=False, help="Initial question to ask the agent", default='What does this workspace contain?'
     )
     parser.add_argument(
         "--include_dirs",
@@ -108,7 +108,7 @@ def parse_arguments():
 
 
 if __name__ == "__main__":
-    load_dotenv()
+    load_dotenv(override=True)
     logger = logging.getLogger(__name__)
     logging.basicConfig(level=logging.INFO)
     args = parse_arguments()

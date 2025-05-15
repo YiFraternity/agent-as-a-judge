@@ -15,13 +15,16 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
     handlers=[RichHandler()],
 )
-load_dotenv()
+load_dotenv(override=True)
 
 
 class Planning:
     def __init__(self):
         self.llm = LLM(
-            model=os.getenv("DEFAULT_LLM"), api_key=os.getenv("OPENAI_API_KEY")
+            model=os.getenv("DEFAULT_LLM"),
+            api_key=os.getenv("OPENAI_API_KEY"),
+            base_url=os.getenv("OPENAI_API_BASE", None),
+            custom_llm_provider=os.getenv("CUSTOM_LLM_PROVIDER", None)
         )
 
     def generate_plan(self, criteria: str) -> dict:

@@ -52,8 +52,8 @@ class LLM:
 
         self.cost = Cost()
         self.model_name = model
-        self.api_key = api_key
-        self.base_url = base_url
+        self.api_key = api_key or os.getenv("OPENAI_API_KEY")
+        self.base_url = base_url or os.getenv("OPENAI_API_BASE")
         self.api_version = api_version
         self.max_input_tokens = max_input_tokens
         self.max_output_tokens = max_output_tokens
@@ -63,7 +63,7 @@ class LLM:
         self.num_retries = num_retries
         self.retry_min_wait = retry_min_wait
         self.retry_max_wait = retry_max_wait
-        self.custom_llm_provider = custom_llm_provider
+        self.custom_llm_provider = custom_llm_provider or os.getenv("CUSTOM_LLM_PROVIDER")
 
         self.model_info = None
         try:
@@ -181,7 +181,7 @@ class LLM:
         return 0.0
 
     def __str__(self):
-        return f"LLM(model={self.model_name}, base_url={self.base_url})"
+        return f"LLM(model={self.model_name}, base_url={self.base_url}, custom_llm_provider={self.custom_llm_provider})"
 
     def __repr__(self):
         return str(self)
@@ -213,19 +213,32 @@ class LLM:
 
 
 if __name__ == "__main__":
-    load_dotenv()
+    load_dotenv(override=True)
 
-    model_name = "gpt-4o-2024-08-06"
+    model_name = os.getenv("DEFAULT_LLM")
+    print(model_name)
     api_key = os.getenv("OPENAI_API_KEY")
-    base_url = "https://api.openai.com/v1"
+    base_url = os.getenv("OPENAI_API_BASE")
 
-    llm_instance = LLM(model=model_name, api_key=api_key, base_url=base_url)
+    llm_instance = LLM(
+        model=model_name,
+        api_key=api_key,
+        base_url=base_url,
+        custom_llm_provider=os.getenv("CUSTOM_LLM_PROVIDER", None)
+    )
+    messages = [{"role": "user", "content": "你好，测试下连通性。"}]
+    print(llm_instance._llm_inference(messages=messages))
 
-    image_path = "/Users/zhugem/Desktop/DevAI/studio/workspace/sample/results/prediction_interactive.png"
-
-    for i in range(1):
-
-        multimodal_response = llm_instance.do_multimodal_completion(
-            "What’s in this image?", image_path
-        )
-        print(multimodal_response)
+    # # 使用 litellm 直接测试连通性
+    # import litellm
+    # try:
+    #     response = litellm.completion(
+    #         model=model_name,
+    #         messages=[{"role": "user", "content": "你好，测试下连通性。"}],
+    #         api_key=api_key,
+    #         base_url=base_url,
+    #         stream=False,
+    #     )
+    #     print("litellm response:", response["choices"][0]["message"]["content"])
+    # except Exception as e:
+    #     print("litellm request failed:", e)

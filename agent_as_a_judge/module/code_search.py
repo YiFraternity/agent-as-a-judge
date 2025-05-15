@@ -11,6 +11,7 @@ import numpy as np
 from typing import List, Dict, Any, Generator, Union
 import networkx as nx
 import spacy
+from FlagEmbedding import BGEM3FlagModel
 from dotenv import load_dotenv
 from pathlib import Path
 from rank_bm25 import BM25Okapi
@@ -46,7 +47,8 @@ class DevCodeSearch:
         self.tree = self.load_tree()
         self.spacy_nlp = None
         self.bm25 = None
-        self.embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
+        # self.embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
+        self.embedding_model = BGEM3FlagModel("/group_homes/our_llm_domain/home/share/open_models/bge/bge-m3")
         self.code_embeddings = None
 
     def search(
@@ -214,7 +216,7 @@ class DevCodeSearch:
             logging.error("No code embeddings available for search.")
             return []
 
-        query_embedding = self.embedding_model.encode(query, convert_to_tensor=True)
+        query_embedding = self.embedding_model.encode(query)['dense_vecs']
         similarities = util.pytorch_cos_sim(query_embedding, self.code_embeddings)
         actual_top_n = min(top_n, similarities.size(1))
         if actual_top_n == 0:
@@ -227,7 +229,7 @@ class DevCodeSearch:
     def _generate_code_embeddings(self):
 
         code_texts = [tag.get("details", "") for tag in self.tags]
-        return self.embedding_model.encode(code_texts, convert_to_tensor=True)
+        return self.embedding_model.encode(code_texts)['dense_vecs']
 
     def display(
         self,
@@ -400,7 +402,7 @@ class DevCodeSearch:
 
 if __name__ == "__main__":
 
-    load_dotenv()
+    load_dotenv(override=True)
     workspace_path = (
         Path(os.getenv("PROJECT_DIR"))
         / "benchmark/workspace/OpenHands/39_Drug_Response_Prediction_SVM_GDSC_ML"

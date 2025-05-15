@@ -33,7 +33,9 @@ class DevAsk:
         try:
             model = os.getenv("DEFAULT_LLM")
             api_key = os.getenv("OPENAI_API_KEY")
-            return LLM(model=model, api_key=api_key)
+            base_url = os.getenv("OPENAI_API_BASE", None)
+            custom_llm_provider=os.getenv("CUSTOM_LLM_PROVIDER", None)
+            return LLM(model=model, api_key=api_key, base_url=base_url, custom_llm_provider=custom_llm_provider)
         except KeyError as e:
             logging.error(f"Missing environment variable: {e}")
             raise
@@ -117,7 +119,7 @@ class DevAsk:
 
 
 if __name__ == "__main__":
-    load_dotenv()
+    load_dotenv(override=True)
     workspace_path = (
         Path(os.getenv("PROJECT_DIR"))
         / "benchmark/workspace/OpenHands/39_Drug_Response_Prediction_SVM_GDSC_ML"

@@ -45,7 +45,10 @@ class DevTextRetrieve:
         self.embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
         self.text_embeddings = None
         self.llm = LLM(
-            model=os.getenv("DEFAULT_LLM"), api_key=os.getenv("OPENAI_API_KEY")
+            model=os.getenv("DEFAULT_LLM"),
+            api_key=os.getenv("OPENAI_API_KEY"),
+            base_url=os.getenv("OPENAI_API_BASE", 'https://api.openai.com'),
+            custom_llm_provider=os.getenv("CUSTOM_LLM_PROVIDER", None)
         )
 
     @property
@@ -196,7 +199,7 @@ class DevTextRetrieve:
         if self.text_embeddings is None:
             self.text_embeddings = self._generate_text_embeddings()
 
-        query_embedding = self.embedding_model.encode(query, convert_to_tensor=True)
+        query_embedding = self.embedding_model.encode(query)['dense_vecs']
         similarities = util.pytorch_cos_sim(query_embedding, self.text_embeddings)[0]
         top_n_indices = similarities.topk(k=top_n)[1]
         return [self.text_data[i] for i in top_n_indices]
@@ -204,7 +207,7 @@ class DevTextRetrieve:
     def _generate_text_embeddings(self):
 
         texts_content = [entry.get("content", "") for entry in self.text_data]
-        return self.embedding_model.encode(texts_content, convert_to_tensor=True)
+        return self.embedding_model.encode(texts_content)['dense_vecs']
 
     def llm_summary(self, criteria: str) -> Dict[str, Any]:
 
@@ -301,7 +304,7 @@ class DevTextRetrieve:
 if __name__ == "__main__":
     from dotenv import load_dotenv
 
-    load_dotenv()
+    load_dotenv(override=True)
     trajectory_file = (
         Path(os.getenv("PROJECT_DIR"))
         + "/benchmark/trajectories/OpenHands/39_Drug_Response_Prediction_SVM_GDSC_ML.json"

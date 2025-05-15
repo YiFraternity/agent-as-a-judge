@@ -1,7 +1,7 @@
 """
 DevGraph: a class that constructs a code graph from a developed workspace.
 
-Reference: 
+Reference:
 1. https://github.com/Aider-AI/aider/blob/0a497b7fd70835e5f79e65c06af42b430b999ba6/aider/repomap.py
 2. https://github.com/ozyyshr/RepoGraph
 """
@@ -924,7 +924,7 @@ class DevGraph:
 
 if __name__ == "__main__":
 
-    load_dotenv()
+    load_dotenv(override=True)
     workspace_path = (
         Path(os.getenv("PROJECT_DIR"))
         / "benchmark/workspace/OpenHands/39_Drug_Response_Prediction_SVM_GDSC_ML"

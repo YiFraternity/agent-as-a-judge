@@ -4,7 +4,7 @@ from typing import Union
 import tiktoken
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=True)
 
 
 def truncate_string(
@@ -21,14 +21,14 @@ def truncate_string(
         return ""
 
     info_string = str(info_string)
-    
+
     try:
         encoding = tiktoken.encoding_for_model(model)
     except KeyError:
         # Fallback to cl100k_base (used by gpt-4) if model not found
         logging.warning(f"Model {model} not found in tiktoken. Using cl100k_base encoding instead.")
         encoding = tiktoken.get_encoding("cl100k_base")
-    
+
     tokens = encoding.encode(info_string, disallowed_special=())
 
     # If tokens exceed the maximum length, we truncate based on the drop_mode

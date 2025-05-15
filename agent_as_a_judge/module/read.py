@@ -30,7 +30,7 @@ from typing import Union, Dict, Any, Optional, Tuple
 from dotenv import load_dotenv
 from agent_as_a_judge.llm.provider import LLM
 
-load_dotenv()
+load_dotenv(override=True)
 
 """INSTALL
 pip install openai --upgrade
@@ -322,7 +322,8 @@ class DevRead:
             llm_instance = LLM(
                 model=os.getenv("DEFAULT_LLM"),
                 api_key=os.getenv("OPENAI_API_KEY"),
-                base_url="https://api.openai.com/v1",
+                base_url=os.getenv("OPENAI_API_BASE", "https://api.openai.com/v1"),
+                custom_llm_provider=os.getenv("CUSTOM_LLM_PROVIDER", None)
             )
 
             if task is None:
@@ -373,7 +374,10 @@ class DevRead:
             total_inference_time = 0.0
 
             llm_instance = LLM(
-                model=os.getenv("DEFAULT_LLM"), api_key=os.getenv("OPENAI_API_KEY")
+                model=os.getenv("DEFAULT_LLM"),
+                api_key=os.getenv("OPENAI_API_KEY"),
+                base_url=os.getenv("OPENAI_API_BASE", "https://api.openai.com/v1"),
+                custom_llm_provider=os.getenv("CUSTOM_LLM_PROVIDER", None)
             )
 
             while video.isOpened():

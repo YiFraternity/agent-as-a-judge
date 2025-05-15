@@ -176,3 +176,5 @@ Dockerfile
 
 # Ignore all judge files
 */judge/
+*.pkl
+judge/

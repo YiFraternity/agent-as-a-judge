@@ -27,11 +27,18 @@ class DevLocate:
     def _initialize_llm(self) -> LLM:
         model = os.getenv("DEFAULT_LLM")
         api_key = os.getenv("OPENAI_API_KEY")
+        base_url = os.getenv("OPENAI_API_BASE", None)
+        custom_llm_provider=os.getenv("CUSTOM_LLM_PROVIDER", None)
         if not model or not api_key:
             raise ValueError(
                 "DEFAULT_LLM or OPENAI_API_KEY not found in environment variables"
             )
-        return LLM(model=model, api_key=api_key)
+        return LLM(
+            model=model,
+            api_key=api_key,
+            base_url=base_url,
+            custom_llm_provider=custom_llm_provider,
+        )
 
     def locate_file(self, criteria: str, workspace_info: str) -> dict:
         system_prompt = get_system_prompt_locate(language="English")
@@ -93,7 +100,7 @@ class DevLocate:
 
 
 if __name__ == "__main__":
-    load_dotenv()
+    load_dotenv(override=True)
     dev_locate = DevLocate()
 
     criteria_example = "Find the database file."
